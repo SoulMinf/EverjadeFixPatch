@@ -4,4 +4,5 @@ Mod that fixes some issues with the [Everjade](https://steamcommunity.com/shared
 
 ### The following issues have been fixed:
 - Jade Ore no longer drops Jade Chunk
-- Duplication when mining Spring Chest, Spring Fountain, Spring Crate, and Dragon Crate[/list]
+- Duplication when mining Spring Chest, Spring Fountain, Spring Crate, and Dragon Crate
+- "Here" message when using Jade Hook
