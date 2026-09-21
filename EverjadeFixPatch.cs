@@ -1,9 +1,12 @@
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.Graphics.Effects;
 
 namespace EverjadeFixPatch
 {
@@ -12,6 +15,7 @@ namespace EverjadeFixPatch
 
     }
 
+    //Duplication fix
     public class FurnitureDropFixSystem : ModSystem
     {
         private static readonly HashSet<string> _excludedTypes = new()
@@ -66,6 +70,7 @@ namespace EverjadeFixPatch
         }
     }
 
+    //Jade Ore no drop fix
     public class JadeOreDropFix : GlobalTile
     {
         public override void KillTile(int i, int j, int type, ref bool fail, ref bool effectOnly, ref bool noItem)
@@ -94,4 +99,67 @@ namespace EverjadeFixPatch
             }
         }
     }
+
+    //Jade Hook "Here" message fix
+    public class JadeHookFixSystem : ModSystem
+    {
+        private static IDisposable? _hook;
+
+        public override void Load()
+        {
+            if (!ModLoader.TryGetMod("JadeFables", out Mod jadeFables))
+                return;
+
+            Assembly asm = jadeFables.GetType().Assembly;
+            var projType = asm.GetType("JadeFables.Items.Jade.JadeHook.JadeHookProjectile");
+
+            var aiMethod = projType.GetMethod("AI", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+
+            _hook = new Hook(aiMethod, (Action<ModProjectile> orig, ModProjectile self) => { });
+        }
+
+        public override void Unload()
+        {
+            _hook?.Dispose();
+            _hook = null;
+        }
+    }
+
+    /*
+    public class JadeLakeWaterFixSystem : ModSystem
+    {
+        private static On_Main.hook_CheckMonoliths? _hook;
+
+        public override void Load()
+        {
+            if (!ModLoader.HasMod("JadeFables"))
+                return;
+
+            _hook = orig =>
+            {
+                orig();
+                ResetOffset();
+            };
+
+            On_Main.CheckMonoliths += _hook;
+        }
+
+        private static void ResetOffset()
+        {
+            if (Main.gameMenu)
+                return;
+
+            var effect = Filters.Scene["JadeLakeWater"]?.GetShader()?.Shader;
+            effect?.Parameters["offset"]?.SetValue(Vector2.Zero);
+        }
+
+        public override void Unload()
+        {
+            if (_hook is not null)
+            {
+                On_Main.CheckMonoliths -= _hook;
+                _hook = null;
+            }
+        }
+    }*/
 }

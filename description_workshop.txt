@@ -1,5 +1,14 @@
-Mod that fixes some issues with the Everjade mod
+Mod that fixes some issues with the [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3229972786]Everjade[/url] mod
 
-The following issues have been fixed:
-- Jade Ore no longer drops Jade Chunk
-- Duplication when mining Spring Chest, Spring Fountain, Spring Crate, and Dragon Crate
+[h3]The following issues have been fixed:[/h3][list]
+[*] Jade Ore no longer drops Jade Chunk
+[*] Duplication when mining Spring Chest, Spring Fountain, Spring Crate, and Dragon Crate
+[*] "Here" message when using Jade Hook [/list]
+
+[h2]Links[/h2]
+[img]https://i.imgur.com/jdunrUl.png[/img]
+
+[img]https://i.imgur.com/mxDesnm.png[/img] ‎ ‎[b][url=https://discord.gg/BafguHjhty]Discord Server[/url][/b]
+[img]https://i.imgur.com/m8YVpSp.png[/img] ‎ ‎[b][url=https://github.com/SoulMinf/Everjade-Fix-Patch]Source Code[/url][/b]
+[img]https://i.imgur.com/1OXhSeG.png[/img] ‎ ‎[b][url=https://steamcommunity.com/id/soul_minefine/myworkshopfiles/?appid=1281930]Other Projects[/url][/b]
+[img]https://i.imgur.com/jXZYlFj.png[/img] ‎ ‎[b][url=https://x.com/soul_minefine]Twitter[/url][/b]
