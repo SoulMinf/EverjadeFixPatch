@@ -364,4 +364,142 @@ namespace EverjadeFixPatch
             }
         }
     }
+
+    // Water jitterig fix
+    public class JadeLakeWaterJitterFix : ModSystem
+    {
+        private delegate void OrigHotspring(object self, On_Main.orig_CheckMonoliths origMain);
+        private delegate void OrigVoid(object self);
+
+        private static readonly List<IDisposable> _hooks = new();
+        private static FieldInfo _oldScreenPos, _framesSinceDraw;
+        private static Vector2 _mapOrigin;
+        private static bool _hasOrigin;
+
+        public override void Load()
+        {
+            if (Main.dedServ || !ModLoader.TryGetMod("JadeFables", out Mod jf))
+                return;
+
+            Assembly asm = jf.GetType().Assembly;
+            Type mapType = asm.GetType("JadeFables.Biomes.JadeLake.JadeLakeMapTarget");
+            Type addonType = asm.GetType("JadeFables.Biomes.JadeLake.JadeLakeAddon");
+            if (mapType == null || addonType == null)
+                return;
+
+            const BindingFlags statics = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+            const BindingFlags inst = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+            const BindingFlags own = BindingFlags.NonPublic | BindingFlags.Static;
+
+            _oldScreenPos = mapType.GetField("oldScreenPos", statics);
+            _framesSinceDraw = mapType.GetField("framesSinceDraw", statics);
+            MethodInfo hotspring = mapType.GetMethod("HotspringTarget", inst);
+            MethodInfo change = addonType.GetMethod("SpritebatchChange", inst);
+            MethodInfo changeBack = addonType.GetMethod("SpritebatchChangeBack", inst);
+
+            if (_oldScreenPos == null || _framesSinceDraw == null ||
+                hotspring == null || change == null || changeBack == null)
+                return;
+
+            Type me = typeof(JadeLakeWaterJitterFix);
+            _hooks.Add(new Hook(hotspring, me.GetMethod(nameof(HotspringDetour), own)));
+            _hooks.Add(new Hook(change, me.GetMethod(nameof(ChangeDetour), own)));
+            _hooks.Add(new Hook(changeBack, me.GetMethod(nameof(ChangeBackDetour), own)));
+        }
+
+        private static void HotspringDetour(OrigHotspring orig, object self, On_Main.orig_CheckMonoliths origMain)
+        {
+            _oldScreenPos.SetValue(null, Main.screenPosition);
+
+            Vector2 originBefore = Main.sceneWaterPos;
+            orig(self, origMain);
+
+            if (_framesSinceDraw.GetValue(null) is int frames && frames == 0)
+            {
+                _mapOrigin = originBefore;
+                _hasOrigin = true;
+            }
+        }
+
+        private static void ChangeDetour(OrigVoid orig, object self)
+        {
+            orig(self);
+            ApplyOffset(Main.sceneWaterPos);
+        }
+
+        private static void ChangeBackDetour(OrigVoid orig, object self)
+        {
+            orig(self);
+            ApplyOffset(Main.sceneBackgroundPos);
+        }
+
+        private static void ApplyOffset(Vector2 targetOrigin)
+        {
+            if (!_hasOrigin || Main.waterTarget == null)
+                return;
+
+            Effect effect = Filters.Scene["JadeLakeWater"]?.GetShader()?.Shader;
+            effect?.Parameters["offset"]?.SetValue((targetOrigin - _mapOrigin) / Main.waterTarget.Size());
+        }
+
+        public override void Unload()
+        {
+            foreach (IDisposable h in _hooks)
+                h.Dispose();
+            _hooks.Clear();
+            _hasOrigin = false;
+        }
+    }
+
+    // Seaweed move to behind blocks
+    public class SeaweedDrawFix : GlobalProjectile
+    {
+        private static int _seaweedType = -1;
+
+        public override void SetStaticDefaults()
+        {
+            if (ModLoader.TryGetMod("JadeFables", out Mod jf) &&
+                jf.TryFind<ModProjectile>("JadeSeaweedProj", out ModProjectile seaweed))
+            {
+                _seaweedType = seaweed.Type;
+            }
+        }
+
+        public override void SetDefaults(Projectile projectile)
+        {
+            if (projectile.type == _seaweedType)
+                projectile.hide = true;
+        }
+
+        public override void DrawBehind(Projectile projectile, int index,
+            List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles,
+            List<int> overPlayers, List<int> overWiresUI)
+        {
+            if (projectile.type == _seaweedType)
+                behindNPCsAndTiles.Add(index);
+        }
+
+        public override bool PreDraw(Projectile projectile, ref Color lightColor)
+        {
+            if (projectile.type != _seaweedType)
+                return true;
+
+            int x = (int)(projectile.Center.X / 16f);
+            int y = (int)(projectile.Center.Y / 16f);
+
+            Vector3 sum = Vector3.Zero;
+            int n = 0;
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -2; dy <= 0; dy++)
+                {
+                    sum += Lighting.GetColor(x + dx, y + dy).ToVector3();
+                    n++;
+                }
+            }
+
+            lightColor = new Color(sum / n);
+            return true;
+        }
+    }
 }
