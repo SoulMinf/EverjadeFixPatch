@@ -25,9 +25,7 @@ public class GravityDrawFixSystem : ModSystem
         const BindingFlags priv = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
 
         // Replacing the rasterizer within the marked methods
-        MethodInfo begin = typeof(SpriteBatch).GetMethod("Begin", BindingFlags.Public | BindingFlags.Instance, null,
-            new[] { typeof(SpriteSortMode), typeof(BlendState), typeof(SamplerState),
-                    typeof(DepthStencilState), typeof(RasterizerState), typeof(Effect), typeof(Matrix) }, null);
+        MethodInfo begin = typeof(SpriteBatch).GetMethod("Begin", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(SpriteSortMode), typeof(BlendState), typeof(SamplerState), typeof(DepthStencilState), typeof(RasterizerState), typeof(Effect), typeof(Matrix) }, null);
         MethodInfo detour = typeof(GravityDrawFixSystem).GetMethod(nameof(BeginDetour), BindingFlags.NonPublic | BindingFlags.Static);
         if (begin != null)
             _hooks.Add(new Hook(begin, detour));
