@@ -451,8 +451,9 @@ namespace EverjadeFixPatch
         }
     }
 
+    // idk if this is necessary
     // Seaweed move to behind blocks
-    public class SeaweedDrawFix : GlobalProjectile
+    /*public class SeaweedDrawFix : GlobalProjectile
     {
         private static int _seaweedType = -1;
 
@@ -501,5 +502,5 @@ namespace EverjadeFixPatch
             lightColor = new Color(sum / n);
             return true;
         }
-    }
+    }*/
 }
